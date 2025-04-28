@@ -29,15 +29,16 @@ jobs:
           sudo apt-get install -y unzip
 
       - name: Get latest release download URL
+        id: get-release-url
         run: |
           latest_release_url="https://api.github.com/repos/bia-pain-bache/BPB-Worker-Panel/releases/latest"
           download_url=$(curl -s "$latest_release_url" | jq -r '.assets[] | select(.name=="worker.zip") | .browser_download_url')
           echo "Download URL: $download_url"
-          echo "::set-output name=url::$download_url"
+          echo "url=$download_url" >> $GITHUB_ENV  # 使用 GITHUB_ENV 来传递值
 
       - name: Download and extract latest BPB worker
         run: |
-          wget ${{ steps.get-release-url.outputs.url }}
+          wget ${{ env.url }}  # 使用 env.url 来引用环境变量
           unzip -o worker.zip
           mv _worker.js origin.js
 
@@ -54,7 +55,7 @@ jobs:
           --self-defending false \
           --simplify true
 
-      - name: 提交更改
+      - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           branch: main
